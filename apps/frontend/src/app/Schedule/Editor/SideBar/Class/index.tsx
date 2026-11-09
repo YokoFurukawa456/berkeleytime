@@ -4,8 +4,6 @@ import {
   EditPencil,
   Eye,
   EyeClosed,
-  Lock,
-  LockSlash,
   Trash,
 } from "iconoir-react";
 
@@ -103,20 +101,16 @@ export default function Class({
   sessionId,
   color,
   hidden = false,
-  locked = false,
   blockedSections = [],
-  lockedComponents = [],
   selectedSections,
   onSectionSelect,
   onSectionMouseOver,
   onSectionMouseOut,
   onDelete,
   onColorChange,
-  onLockChange,
   onHideChange,
   onSectionBlockToggle,
   onComponentBlockToggle,
-  onComponentLockChange,
 }: ClassProps) {
   const groups = useMemo(() => {
     const sortedSections = _class.sections.toSorted((a, b) =>
@@ -192,17 +186,6 @@ export default function Class({
       subItems: colorSubItems,
     },
     {
-      name: locked ? "Unlock class" : "Lock class",
-      icon: <Lock width={18} height={18} />,
-      onClick: () =>
-        onLockChange(
-          _class.subject,
-          _class.courseNumber,
-          _class.number,
-          !locked
-        ),
-    },
-    {
       name: hidden ? "Show class" : "Hide class",
       icon: hidden ? (
         <Eye width={18} height={18} />
@@ -264,17 +247,6 @@ export default function Class({
             editing ? <ActionMenu menuItems={menuItems} asIcon /> : undefined
           }
           wrapDescription={true}
-          onUnlock={
-            locked
-              ? () =>
-                  onLockChange(
-                    _class.subject,
-                    _class.courseNumber,
-                    _class.number,
-                    false
-                  )
-              : undefined
-          }
         >
           <div className={styles.group}>
             <div className={styles.label}>
@@ -321,42 +293,6 @@ export default function Class({
                                 : "Exclude All Sections"
                             }
                           />
-                          {getSectionCountForComponent(primaryComponent) >
-                            1 && (
-                            <Tooltip
-                              trigger={
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onComponentLockChange(
-                                      _class.subject,
-                                      _class.courseNumber,
-                                      _class.number,
-                                      primaryComponent,
-                                      !lockedComponents.includes(
-                                        primaryComponent
-                                      )
-                                    );
-                                  }}
-                                  className={`${styles.iconButton} ${lockedComponents.includes(primaryComponent) ? styles.locked : ""}`}
-                                >
-                                  {lockedComponents.includes(
-                                    primaryComponent
-                                  ) ? (
-                                    <Lock width={16} height={16} />
-                                  ) : (
-                                    <LockSlash width={16} height={16} />
-                                  )}
-                                </button>
-                              }
-                              title={
-                                lockedComponents.includes(primaryComponent)
-                                  ? "Unlock component"
-                                  : "Lock component"
-                              }
-                            />
-                          )}
                         </div>
                       </div>
                       <p className={styles.time}>Time</p>
@@ -421,8 +357,6 @@ export default function Class({
           </div>
           {Object.keys(groups).map((component) => {
             const group = component as Component;
-            const isLocked = lockedComponents.includes(group);
-            const sectionCount = getSectionCountForComponent(group);
 
             return (
               <div className={styles.group} key={component}>
@@ -462,35 +396,6 @@ export default function Class({
                             : "Exclude All Sections"
                         }
                       />
-                      {sectionCount > 1 && (
-                        <Tooltip
-                          trigger={
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onComponentLockChange(
-                                  _class.subject,
-                                  _class.courseNumber,
-                                  _class.number,
-                                  group,
-                                  !isLocked
-                                );
-                              }}
-                              className={`${styles.iconButton} ${isLocked ? styles.locked : ""}`}
-                            >
-                              {isLocked ? (
-                                <Lock width={16} height={16} />
-                              ) : (
-                                <LockSlash width={16} height={16} />
-                              )}
-                            </button>
-                          }
-                          title={
-                            isLocked ? "Unlock component" : "Lock component"
-                          }
-                        />
-                      )}
                     </div>
                   </div>
                   <p className={styles.time}>Time</p>

@@ -50,13 +50,6 @@
             background-color: var(--active-background);
           }
 
-          &.locked {
-            color: var(--accent-color);
-
-            &:hover {
-              color: var(--accent-color);
-            }
-          }
         }
       }
     }
