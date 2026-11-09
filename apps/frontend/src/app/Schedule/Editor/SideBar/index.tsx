@@ -59,20 +59,6 @@ interface SideBarProps {
     classNumber: string,
     hidden: boolean
   ) => void;
-  onSectionBlockToggle: (
-    subject: string,
-    courseNumber: string,
-    classNumber: string,
-    sectionId: number,
-    blocked: boolean
-  ) => void;
-  onComponentBlockToggle: (
-    subject: string,
-    courseNumber: string,
-    classNumber: string,
-    component: Component,
-    blocked: boolean
-  ) => void;
   onComponentLockChange: (
     subject: string,
     courseNumber: string,
@@ -98,8 +84,6 @@ export default function SideBar({
   onColorChange,
   onLockChange,
   onHideChange,
-  onSectionBlockToggle,
-  onComponentBlockToggle,
   onComponentLockChange,
   onEventColorChange,
   onEventTitleChange,
@@ -207,7 +191,6 @@ export default function SideBar({
               color={selectedClass.color!}
               hidden={selectedClass.hidden ?? false}
               locked={selectedClass.locked ?? false}
-              blockedSections={selectedClass.blockedSections}
               lockedComponents={selectedClass.lockedComponents ?? []}
               expanded={expanded[index] ?? false}
               onExpandedChange={(expanded) => onExpandedChange(index, expanded)}
@@ -219,8 +202,6 @@ export default function SideBar({
               onColorChange={onColorChange}
               onLockChange={onLockChange}
               onHideChange={onHideChange}
-              onSectionBlockToggle={onSectionBlockToggle}
-              onComponentBlockToggle={onComponentBlockToggle}
               onComponentLockChange={onComponentLockChange}
             />
           );

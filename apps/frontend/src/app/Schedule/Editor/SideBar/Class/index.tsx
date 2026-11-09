@@ -1,13 +1,6 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import {
-  EditPencil,
-  Eye,
-  EyeClosed,
-  Trash,
-} from "iconoir-react";
-
-import { Tooltip } from "@repo/theme";
+import { EditPencil, Eye, EyeClosed, Trash } from "iconoir-react";
 
 import { acceptedColors } from "@/app/Schedule/schedule";
 import { ActionMenu } from "@/components/ActionMenu";
@@ -33,7 +26,6 @@ interface ClassProps {
   color: Color;
   hidden?: boolean;
   locked?: boolean;
-  blockedSections?: IScheduleClass["blockedSections"];
   lockedComponents?: Component[];
   selectedSections: IScheduleClass["selectedSections"];
   onSectionSelect: (
@@ -68,20 +60,6 @@ interface ClassProps {
     classNumber: string,
     hidden: boolean
   ) => void;
-  onSectionBlockToggle: (
-    subject: string,
-    courseNumber: string,
-    classNumber: string,
-    sectionId: number,
-    blocked: boolean
-  ) => void;
-  onComponentBlockToggle: (
-    subject: string,
-    courseNumber: string,
-    classNumber: string,
-    component: Component,
-    blocked: boolean
-  ) => void;
   onComponentLockChange: (
     subject: string,
     courseNumber: string,
@@ -101,7 +79,6 @@ export default function Class({
   sessionId,
   color,
   hidden = false,
-  blockedSections = [],
   selectedSections,
   onSectionSelect,
   onSectionMouseOver,
@@ -109,8 +86,6 @@ export default function Class({
   onDelete,
   onColorChange,
   onHideChange,
-  onSectionBlockToggle,
-  onComponentBlockToggle,
 }: ClassProps) {
   const groups = useMemo(() => {
     const sortedSections = _class.sections.toSorted((a, b) =>
@@ -119,55 +94,6 @@ export default function Class({
 
     return Object.groupBy(sortedSections, (section) => section.component);
   }, [_class]);
-
-  // Helper to count sections for a component (including primary section if it matches)
-  const getSectionCountForComponent = useCallback(
-    (component: Component) => {
-      const sectionsInGroup = groups[component] || [];
-      const primaryMatches =
-        _class.primarySection?.component === component ? 1 : 0;
-      return sectionsInGroup.length + primaryMatches;
-    },
-    [groups, _class.primarySection]
-  );
-
-  // Helper to get all section IDs for a component
-  const getSectionIdsForComponent = useCallback(
-    (component: Component): number[] => {
-      const sectionsInGroup = groups[component] || [];
-      const sectionIds: number[] = [];
-
-      // Add section IDs from grouped sections
-      sectionsInGroup.forEach((section) => {
-        if (section?.sectionId) {
-          sectionIds.push(section.sectionId);
-        }
-      });
-
-      // Add primary section if it matches the component
-      if (
-        _class.primarySection?.component === component &&
-        _class.primarySection?.sectionId
-      ) {
-        sectionIds.push(_class.primarySection.sectionId);
-      }
-
-      return sectionIds;
-    },
-    [groups, _class.primarySection]
-  );
-
-  // Helper to check if all sections in a component are blocked
-  const areAllSectionsBlocked = useCallback(
-    (component: Component): boolean => {
-      const sectionIds = getSectionIdsForComponent(component);
-      if (sectionIds.length === 0) return false;
-      return sectionIds.every((sectionId) =>
-        blockedSections?.find((s) => s === sectionId)
-      );
-    },
-    [getSectionIdsForComponent, blockedSections]
-  );
 
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -255,46 +181,9 @@ export default function Class({
                   const primaryComponent = _class.primarySection.component;
                   return (
                     <>
-                      <div className={styles.componentRow}>
-                        <p className={styles.component}>
-                          {componentMap[primaryComponent]}
-                        </p>
-                        <div className={styles.componentIcons}>
-                          <Tooltip
-                            trigger={
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const allBlocked =
-                                    areAllSectionsBlocked(primaryComponent);
-
-                                  // Toggle all sections in this component
-                                  onComponentBlockToggle(
-                                    _class.subject,
-                                    _class.courseNumber,
-                                    _class.number,
-                                    primaryComponent,
-                                    !allBlocked
-                                  );
-                                }}
-                                className={styles.iconButton}
-                              >
-                                {areAllSectionsBlocked(primaryComponent) ? (
-                                  <EyeClosed width={16} height={16} />
-                                ) : (
-                                  <Eye width={16} height={16} />
-                                )}
-                              </button>
-                            }
-                            title={
-                              areAllSectionsBlocked(primaryComponent)
-                                ? "Include All Sections"
-                                : "Exclude All Sections"
-                            }
-                          />
-                        </div>
-                      </div>
+                      <p className={styles.component}>
+                        {componentMap[primaryComponent]}
+                      </p>
                       <p className={styles.time}>Time</p>
                     </>
                   );
@@ -313,27 +202,7 @@ export default function Class({
                     selectedSection.sectionId ===
                     _class.primarySection?.sectionId
                 )}
-                blocked={
-                  blockedSections?.find(
-                    (s) => s === _class.primarySection?.sectionId
-                  )
-                    ? true
-                    : false
-                }
                 editing={editing}
-                onBlockToggle={() => {
-                  onSectionBlockToggle(
-                    _class.subject,
-                    _class.courseNumber,
-                    _class.number,
-                    _class.primarySection!.sectionId,
-                    !blockedSections?.find(
-                      (s) => s === _class.primarySection!.sectionId
-                    )
-                      ? true
-                      : false
-                  );
-                }}
                 {..._class.primarySection}
                 onSectionMouseOver={() =>
                   onSectionMouseOver(
@@ -361,43 +230,7 @@ export default function Class({
             return (
               <div className={styles.group} key={component}>
                 <div className={styles.label}>
-                  <div className={styles.componentRow}>
-                    <p className={styles.component}>{componentMap[group]}</p>
-                    <div className={styles.componentIcons}>
-                      <Tooltip
-                        trigger={
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const allBlocked = areAllSectionsBlocked(group);
-
-                              // Toggle all sections in this component
-                              onComponentBlockToggle(
-                                _class.subject,
-                                _class.courseNumber,
-                                _class.number,
-                                group,
-                                !allBlocked
-                              );
-                            }}
-                            className={styles.iconButton}
-                          >
-                            {areAllSectionsBlocked(group) ? (
-                              <EyeClosed width={16} height={16} />
-                            ) : (
-                              <Eye width={16} height={16} />
-                            )}
-                          </button>
-                        }
-                        title={
-                          areAllSectionsBlocked(group)
-                            ? "Include All Sections"
-                            : "Exclude All Sections"
-                        }
-                      />
-                    </div>
-                  </div>
+                  <p className={styles.component}>{componentMap[group]}</p>
                   <p className={styles.time}>Time</p>
                 </div>
                 {groups[group]?.map((section) => {
@@ -405,26 +238,11 @@ export default function Class({
                     (selectedSection) =>
                       selectedSection.sectionId === section.sectionId
                   );
-                  const isBlocked = blockedSections?.find(
-                    (s) => s === section.sectionId
-                  )
-                    ? true
-                    : false;
 
                   return (
                     <Section
                       active={active}
-                      blocked={isBlocked}
                       editing={editing}
-                      onBlockToggle={() => {
-                        onSectionBlockToggle(
-                          _class.subject,
-                          _class.courseNumber,
-                          _class.number,
-                          section.sectionId,
-                          !isBlocked
-                        );
-                      }}
                       onSectionMouseOut={onSectionMouseOut}
                       onSectionMouseOver={() =>
                         onSectionMouseOver(

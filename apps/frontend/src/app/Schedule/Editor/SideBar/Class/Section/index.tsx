@@ -1,7 +1,4 @@
 import classNames from "classnames";
-import { Eye, EyeClosed } from "iconoir-react";
-
-import { Tooltip } from "@repo/theme";
 
 import CCN from "@/components/CCN";
 import Time from "@/components/Time";
@@ -13,9 +10,7 @@ interface SectionProps {
   onSectionSelect?: () => void;
   onSectionMouseOver: () => void;
   onSectionMouseOut: () => void;
-  onBlockToggle?: () => void;
   active: boolean;
-  blocked?: boolean;
   editing?: boolean;
 }
 
@@ -23,9 +18,7 @@ export default function Section({
   onSectionSelect,
   onSectionMouseOver,
   onSectionMouseOut,
-  onBlockToggle,
   active,
-  blocked = false,
   editing = true,
   sectionId,
   number,
@@ -35,18 +28,16 @@ export default function Section({
   return meetingsAdjusted.map((meeting) => (
     <div
       className={classNames(styles.root, {
-        [styles.active]: active && !blocked,
-        [styles.blocked]: blocked,
+        [styles.active]: active,
         [styles.noHover]: !editing,
       })}
       key={sectionId}
       onClick={(e) => {
-        if (blocked) return;
         e.stopPropagation();
         onSectionSelect?.();
       }}
-      onMouseOver={() => !blocked && onSectionMouseOver()}
-      onMouseOut={() => !blocked && onSectionMouseOut()}
+      onMouseOver={onSectionMouseOver}
+      onMouseOut={onSectionMouseOut}
     >
       <div className={styles.radioButton} />
       <p className={styles.title}>{number}</p>
@@ -57,32 +48,6 @@ export default function Section({
         days={meeting?.days ?? null}
         className={styles.time}
       />
-      {onBlockToggle && (
-        <Tooltip
-          trigger={
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onBlockToggle();
-              }}
-              className={styles.blockButton}
-              title={blocked ? "Include section" : "Exclude section"}
-            >
-              {blocked ? (
-                <EyeClosed
-                  width={14}
-                  height={14}
-                  color="var(--paragraph-color)"
-                />
-              ) : (
-                <Eye width={14} height={14} color="var(--paragraph-color)" />
-              )}
-            </button>
-          }
-          title={blocked ? "Include section" : "Exclude section"}
-        />
-      )}
     </div>
   ));
 }
